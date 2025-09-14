@@ -138,8 +138,13 @@ const Hero = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  <Button variant="hero" className="w-full" size="lg">
-                    Create Account
+                  <Button 
+                    variant="hero" 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => window.location.href = `/field-input?role=${selectedRole}`}
+                  >
+                    Get Started
                   </Button>
                   <Button variant="outline" className="w-full">
                     Login to Existing Account
