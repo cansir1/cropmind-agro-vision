@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Satellite, BarChart3, Users, MapPin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-agriculture.jpg";
 
 const Hero = () => {
@@ -22,10 +22,6 @@ const Hero = () => {
   const [authLoading, setAuthLoading] = useState(false);
 
   const handleSignup = async () => {
-    if (!isSupabaseConfigured()) {
-      toast.error("Authentication is not configured. Please connect Supabase integration.");
-      return;
-    }
     if (!signupEmail || !signupPassword) {
       toast.error("Email and password are required");
       return;
@@ -36,15 +32,17 @@ const Hero = () => {
     }
     try {
       setAuthLoading(true);
-      const { error } = await supabase!.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: signupEmail,
         password: signupPassword,
-        options: { data: { role: selectedRole } },
+        options: { 
+          data: { role: selectedRole },
+          emailRedirectTo: `${window.location.origin}/`
+        },
       });
       if (error) throw error;
-      toast.success("Registered successfully");
+      toast.success("Please check your email to confirm your account");
       setShowSignup(false);
-      window.location.href = `/field-input?role=${selectedRole}`;
     } catch (err: any) {
       toast.error(err.message || "Registration failed");
     } finally {
@@ -53,17 +51,13 @@ const Hero = () => {
   };
 
   const handleLogin = async () => {
-    if (!isSupabaseConfigured()) {
-      toast.error("Authentication is not configured. Please connect Supabase integration.");
-      return;
-    }
     if (!loginEmail || !loginPassword) {
       toast.error("Email and password are required");
       return;
     }
     try {
       setAuthLoading(true);
-      const { error } = await supabase!.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: loginEmail,
         password: loginPassword,
       });
