@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Satellite, BarChart3, Users, MapPin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabaseClient";
+import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import heroImage from "@/assets/hero-agriculture.jpg";
 
 const Hero = () => {
@@ -22,6 +22,10 @@ const Hero = () => {
   const [authLoading, setAuthLoading] = useState(false);
 
   const handleSignup = async () => {
+    if (!isSupabaseConfigured()) {
+      toast.error("Authentication is not configured. Please connect Supabase integration.");
+      return;
+    }
     if (!signupEmail || !signupPassword) {
       toast.error("Email and password are required");
       return;
@@ -32,7 +36,7 @@ const Hero = () => {
     }
     try {
       setAuthLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabase!.auth.signUp({
         email: signupEmail,
         password: signupPassword,
         options: { data: { role: selectedRole } },
@@ -49,13 +53,17 @@ const Hero = () => {
   };
 
   const handleLogin = async () => {
+    if (!isSupabaseConfigured()) {
+      toast.error("Authentication is not configured. Please connect Supabase integration.");
+      return;
+    }
     if (!loginEmail || !loginPassword) {
       toast.error("Email and password are required");
       return;
     }
     try {
       setAuthLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase!.auth.signInWithPassword({
         email: loginEmail,
         password: loginPassword,
       });

@@ -6,12 +6,18 @@ const supabaseAnonKey = (window as any)?.__SUPABASE_ANON_KEY__ || (import.meta a
 
 let supabase: SupabaseClient | null = null;
 
+// Only create client if both URL and key are available
 if (supabaseUrl && supabaseAnonKey) {
-  supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
-} else {
-  console.warn(
-    "Supabase is not configured. Please connect the Supabase integration or provide URL and anon key."
-  );
+  try {
+    supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
+  } catch (error) {
+    console.error("Failed to create Supabase client:", error);
+  }
 }
 
 export { supabase };
+
+// Helper function to check if Supabase is configured
+export const isSupabaseConfigured = () => {
+  return supabase !== null;
+};
