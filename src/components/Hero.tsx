@@ -1,13 +1,74 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Satellite, BarChart3, Users, MapPin } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabaseClient";
 import heroImage from "@/assets/hero-agriculture.jpg";
 
 const Hero = () => {
   const [selectedRole, setSelectedRole] = useState("farmer");
+  const [showSignup, setShowSignup] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [signupConfirm, setSignupConfirm] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const handleSignup = async () => {
+    if (!signupEmail || !signupPassword) {
+      toast.error("Email and password are required");
+      return;
+    }
+    if (signupPassword !== signupConfirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    try {
+      setAuthLoading(true);
+      const { error } = await supabase.auth.signUp({
+        email: signupEmail,
+        password: signupPassword,
+        options: { data: { role: selectedRole } },
+      });
+      if (error) throw error;
+      toast.success("Registered successfully");
+      setShowSignup(false);
+      window.location.href = `/field-input?role=${selectedRole}`;
+    } catch (err: any) {
+      toast.error(err.message || "Registration failed");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogin = async () => {
+    if (!loginEmail || !loginPassword) {
+      toast.error("Email and password are required");
+      return;
+    }
+    try {
+      setAuthLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      });
+      if (error) throw error;
+      toast.success("Logged in successfully");
+      setShowLogin(false);
+      window.location.href = `/field-input?role=${selectedRole}`;
+    } catch (err: any) {
+      toast.error(err.message || "Login failed");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   return (
     <section className="relative min-h-screen flex items-center">
@@ -142,11 +203,11 @@ const Hero = () => {
                     variant="hero" 
                     className="w-full" 
                     size="lg"
-                    onClick={() => window.location.href = `/field-input?role=${selectedRole}`}
+                    onClick={() => setShowSignup(true)}
                   >
                     Get Started
                   </Button>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" onClick={() => setShowLogin(true)}>
                     Login to Existing Account
                   </Button>
                 </div>
@@ -159,6 +220,59 @@ const Hero = () => {
           </div>
         </div>
       </div>
+
+      {/* Auth Dialogs */}
+      <Dialog open={showSignup} onOpenChange={setShowSignup}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create your account</DialogTitle>
+            <DialogDescription>Register to continue to CropMind</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="signup-email">Email</Label>
+              <Input id="signup-email" type="email" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="signup-password">Password</Label>
+              <Input id="signup-password" type="password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="signup-confirm">Confirm Password</Label>
+              <Input id="signup-confirm" type="password" value={signupConfirm} onChange={(e) => setSignupConfirm(e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground">Selected role: {selectedRole}</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowSignup(false)}>Cancel</Button>
+            <Button onClick={handleSignup} disabled={authLoading}>{authLoading ? "Signing up..." : "Create account"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showLogin} onOpenChange={setShowLogin}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Login</DialogTitle>
+            <DialogDescription>Sign in to continue to CropMind</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <Label htmlFor="login-email">Email</Label>
+              <Input id="login-email" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="login-password">Password</Label>
+              <Input id="login-password" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground">Selected role: {selectedRole}</p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowLogin(false)}>Cancel</Button>
+            <Button onClick={handleLogin} disabled={authLoading}>{authLoading ? "Logging in..." : "Login"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
