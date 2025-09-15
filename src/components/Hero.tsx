@@ -15,15 +15,16 @@ const Hero = () => {
   const [showSignup, setShowSignup] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [signupEmail, setSignupEmail] = useState("");
+  const [signupUsername, setSignupUsername] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirm, setSignupConfirm] = useState("");
-  const [loginEmail, setLoginEmail] = useState("");
+  const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
 
   const handleSignup = async () => {
-    if (!signupEmail || !signupPassword) {
-      toast.error("Email and password are required");
+    if (!signupEmail || !signupUsername || !signupPassword) {
+      toast.error("Email, username and password are required");
       return;
     }
     if (signupPassword !== signupConfirm) {
@@ -36,12 +37,15 @@ const Hero = () => {
         email: signupEmail,
         password: signupPassword,
         options: { 
-          data: { role: selectedRole },
+          data: { 
+            username: signupUsername,
+            role: selectedRole 
+          },
           emailRedirectTo: `${window.location.origin}/`
         },
       });
       if (error) throw error;
-      toast.success("Please check your email to confirm your account");
+      toast.success("Account created successfully! Please check your email to confirm.");
       setShowSignup(false);
     } catch (err: any) {
       toast.error(err.message || "Registration failed");
@@ -51,17 +55,30 @@ const Hero = () => {
   };
 
   const handleLogin = async () => {
-    if (!loginEmail || !loginPassword) {
-      toast.error("Email and password are required");
+    if (!loginIdentifier || !loginPassword) {
+      toast.error("Username/email and password are required");
       return;
     }
     try {
       setAuthLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
+      
+      // Try to get user email by username or email
+      const { data: userData } = await supabase.rpc('get_user_by_username_or_email', {
+        identifier: loginIdentifier
+      });
+      
+      let emailToUse = loginIdentifier;
+      if (userData && userData.length > 0) {
+        emailToUse = userData[0].email;
+      }
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: emailToUse,
         password: loginPassword,
       });
+      
       if (error) throw error;
+      
       toast.success("Logged in successfully");
       setShowLogin(false);
       window.location.href = `/field-input?role=${selectedRole}`;
@@ -236,6 +253,10 @@ const Hero = () => {
               <Input id="signup-email" type="email" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="signup-username">Username</Label>
+              <Input id="signup-username" type="text" value={signupUsername} onChange={(e) => setSignupUsername(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
               <Label htmlFor="signup-password">Password</Label>
               <Input id="signup-password" type="password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} />
             </div>
@@ -260,8 +281,8 @@ const Hero = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-2">
-              <Label htmlFor="login-email">Email</Label>
-              <Input id="login-email" type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
+              <Label htmlFor="login-identifier">Username or Email</Label>
+              <Input id="login-identifier" type="text" value={loginIdentifier} onChange={(e) => setLoginIdentifier(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="login-password">Password</Label>
