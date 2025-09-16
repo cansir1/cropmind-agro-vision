@@ -16,11 +16,17 @@ const MapComponent: React.FC<MapComponentProps> = ({ onAreaCalculated, onLocatio
   const [mapboxToken, setMapboxToken] = useState<string>('');
 
   useEffect(() => {
-    // For now, we'll use a placeholder. In production, this should come from Supabase secrets
-    const token = process.env.REACT_APP_MAPBOX_TOKEN || 'pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJjbGV4YW1wbGUifQ.example';
-    setMapboxToken(token);
+    // For now, we'll use a placeholder token for development
+    // In production, this should come from Supabase secrets
+    const token = 'pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJjbGV4YW1wbGUifQ.example';
     
-    if (!mapContainer.current || !token) return;
+    // Only set token if it's a valid Mapbox token (starts with 'pk.' and is longer than placeholder)
+    const isValidToken = token.startsWith('pk.') && token.length > 50;
+    if (isValidToken) {
+      setMapboxToken(token);
+    }
+    
+    if (!mapContainer.current || !isValidToken) return;
 
     mapboxgl.accessToken = token;
     
@@ -106,10 +112,13 @@ const MapComponent: React.FC<MapComponentProps> = ({ onAreaCalculated, onLocatio
   if (!mapboxToken) {
     return (
       <div className="w-full h-64 bg-muted rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-2">Mapbox token required</p>
-          <p className="text-sm text-muted-foreground">
-            Please add your Mapbox token to environment variables
+        <div className="text-center p-4">
+          <p className="text-muted-foreground mb-2">Interactive Map Unavailable</p>
+          <p className="text-sm text-muted-foreground mb-3">
+            To enable the interactive map with drawing tools, you'll need a Mapbox public token.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Get your free token at <span className="font-mono">mapbox.com</span> and add it to your Supabase secrets as MAPBOX_PUBLIC_TOKEN
           </p>
         </div>
       </div>
