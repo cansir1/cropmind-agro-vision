@@ -18,14 +18,19 @@ const Dashboard = () => {
   useEffect(() => {
     const checkUser = async () => {
       try {
+        console.log('Dashboard: Checking authentication...');
         const { data: { session } } = await supabase.auth.getSession();
         
+        console.log('Dashboard: Session check result:', session ? 'Session found' : 'No session');
+        
         if (!session) {
+          console.log('Dashboard: No session found, redirecting to home');
           navigate("/");
           return;
         }
 
         setUser(session.user);
+        console.log('Dashboard: User authenticated:', session.user.email);
         
         // Get user profile to fetch role
         const { data: profile, error } = await supabase
@@ -35,7 +40,7 @@ const Dashboard = () => {
           .single();
 
         if (error) {
-          console.error('Error fetching profile:', error);
+          console.error('Dashboard: Error fetching profile:', error);
           toast({
             title: "Error",
             description: "Failed to load user profile.",
@@ -44,9 +49,10 @@ const Dashboard = () => {
           return;
         }
 
+        console.log('Dashboard: Profile loaded:', profile);
         setUserRole(profile?.role || "farmer");
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Dashboard: Unexpected error:', error);
         toast({
           title: "Error",
           description: "An unexpected error occurred.",

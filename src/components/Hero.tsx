@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Satellite, BarChart3, Users, MapPin } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-agriculture.jpg";
@@ -21,6 +21,22 @@ const Hero = () => {
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkExistingAuth = async () => {
+      console.log('Hero: Checking for existing authentication...');
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        console.log('Hero: User already authenticated, redirecting to dashboard');
+        // User is already logged in, redirect to dashboard
+        window.location.href = '/dashboard';
+      }
+    };
+    
+    checkExistingAuth();
+  }, []);
 
   const handleSignup = async () => {
     if (!signupEmail || !signupUsername || !signupPassword) {
@@ -47,6 +63,10 @@ const Hero = () => {
       if (error) throw error;
       toast.success("Account created successfully! Please check your email to confirm.");
       setShowSignup(false);
+      // After signup, redirect to field input after a short delay to allow session to establish
+      setTimeout(() => {
+        window.location.href = `/field-input?role=${selectedRole}`;
+      }, 100);
     } catch (err: any) {
       toast.error(err.message || "Registration failed");
     } finally {
@@ -61,6 +81,7 @@ const Hero = () => {
     }
     try {
       setAuthLoading(true);
+      console.log('Hero: Starting login process for:', loginIdentifier);
       
       // Try to get user email by username or email
       const { data: userData } = await supabase.rpc('get_user_by_username_or_email', {
@@ -70,8 +91,10 @@ const Hero = () => {
       let emailToUse = loginIdentifier;
       if (userData && userData.length > 0) {
         emailToUse = userData[0].email;
+        console.log('Hero: Found user email:', emailToUse);
       }
       
+      console.log('Hero: Attempting login with email:', emailToUse);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: emailToUse,
         password: loginPassword,
@@ -79,10 +102,15 @@ const Hero = () => {
       
       if (error) throw error;
       
+      console.log('Hero: Login successful, session:', data.session ? 'Session created' : 'No session');
       toast.success("Logged in successfully");
       setShowLogin(false);
-      window.location.href = `/field-input?role=${selectedRole}`;
+      // Use React Router navigation instead of window.location to maintain session
+      setTimeout(() => {
+        window.location.href = `/field-input?role=${selectedRole}`;
+      }, 100);
     } catch (err: any) {
+      console.error('Hero: Login error:', err);
       toast.error(err.message || "Login failed");
     } finally {
       setAuthLoading(false);
