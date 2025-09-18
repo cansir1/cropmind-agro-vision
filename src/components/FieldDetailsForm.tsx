@@ -17,6 +17,8 @@ const cropTypes = [
 const fieldFormSchema = z.object({
   fieldName: z.string().min(1, 'Field name is required'),
   cropType: z.string().min(1, 'Please select a crop type'),
+  location: z.string().optional(),
+  area: z.string().optional(),
   soilMoisture: z.string().optional(),
   temperature: z.string().optional(),
   humidity: z.string().optional(),
@@ -45,6 +47,8 @@ const FieldDetailsForm: React.FC<FieldDetailsFormProps> = ({
     defaultValues: {
       fieldName: '',
       cropType: '',
+      location: '',
+      area: '',
       soilMoisture: '',
       temperature: '',
       humidity: '',
@@ -106,19 +110,46 @@ const FieldDetailsForm: React.FC<FieldDetailsFormProps> = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Location</label>
-                <Input value={location} readOnly className="bg-muted" />
-              </div>
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g., Farm City, State or coordinates" 
+                        value={location || field.value}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          // Update parent component if needed
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Area</label>
-                <Input 
-                  value={area > 0 ? `${area.toFixed(2)} acres` : 'Draw area on map'} 
-                  readOnly 
-                  className="bg-muted" 
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="area"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Area (acres)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="e.g., 10.5" 
+                        min="0"
+                        value={area > 0 ? area.toString() : field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Sensor Data Section */}
@@ -227,7 +258,7 @@ const FieldDetailsForm: React.FC<FieldDetailsFormProps> = ({
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loading || area <= 0}
+              disabled={loading}
             >
               {loading ? 'Processing...' : 'Analyze Field Data'}
             </Button>

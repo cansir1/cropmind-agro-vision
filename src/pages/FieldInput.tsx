@@ -35,25 +35,24 @@ const FieldInput = () => {
     setLoading(true);
     
     try {
-      // Here we would normally save to Supabase
+      // Combine all field data for mock dashboard
       const completeFieldData = {
         ...formData,
-        location: fieldData.location,
-        area: fieldData.area,
-        coordinates: fieldData.coordinates,
+        location: formData.location || fieldData.location || 'Demo Location',
+        area: formData.area || fieldData.area || 10,
+        coordinates: fieldData.coordinates.length > 0 ? fieldData.coordinates : [[0, 0], [1, 0], [1, 1], [0, 1]],
         userRole,
         timestamp: new Date().toISOString(),
       };
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       console.log('Field data submitted:', completeFieldData);
       toast.success('Field data saved successfully!');
       
-      // Navigate to appropriate dashboard based on role
-      const dashboardRoute = `/dashboard?role=${userRole}`;
-      navigate(dashboardRoute);
+      // Navigate to dashboard
+      navigate('/dashboard');
       
     } catch (error) {
       console.error('Error saving field data:', error);
