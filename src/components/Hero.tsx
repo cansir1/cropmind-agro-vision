@@ -6,11 +6,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Satellite, BarChart3, Users, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-agriculture.jpg";
 
 const Hero = () => {
+  const navigate = useNavigate();
   const [selectedRole, setSelectedRole] = useState("farmer");
   const [showSignup, setShowSignup] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -31,7 +33,7 @@ const Hero = () => {
       if (session) {
         console.log('Hero: User already authenticated, redirecting to dashboard');
         // User is already logged in, redirect to dashboard
-        window.location.href = '/dashboard';
+        navigate('/dashboard');
       }
     };
     
@@ -63,10 +65,8 @@ const Hero = () => {
       if (error) throw error;
       toast.success("Account created successfully! Please check your email to confirm.");
       setShowSignup(false);
-      // After signup, redirect to field input after a short delay to allow session to establish
-      setTimeout(() => {
-        window.location.href = `/field-input?role=${selectedRole}`;
-      }, 100);
+      // After signup, redirect to field input
+      navigate(`/field-input?role=${selectedRole}`);
     } catch (err: any) {
       toast.error(err.message || "Registration failed");
     } finally {
@@ -105,10 +105,8 @@ const Hero = () => {
       console.log('Hero: Login successful, session:', data.session ? 'Session created' : 'No session');
       toast.success("Logged in successfully");
       setShowLogin(false);
-      // Use React Router navigation instead of window.location to maintain session
-      setTimeout(() => {
-        window.location.href = `/field-input?role=${selectedRole}`;
-      }, 100);
+      // Navigate to field input after successful login
+      navigate(`/field-input?role=${selectedRole}`);
     } catch (err: any) {
       console.error('Hero: Login error:', err);
       toast.error(err.message || "Login failed");
