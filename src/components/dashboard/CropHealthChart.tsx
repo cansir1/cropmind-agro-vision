@@ -25,6 +25,13 @@ const CropHealthChart = () => {
             stroke="hsl(var(--muted-foreground))"
             fontSize={12}
           />
+          <YAxis 
+            yAxisId="right"
+            orientation="right"
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={12}
+            domain={[0, 1]}
+          />
           <Tooltip 
             contentStyle={{
               backgroundColor: 'hsl(var(--popover))',
