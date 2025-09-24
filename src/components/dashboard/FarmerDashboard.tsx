@@ -2,8 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { AlertTriangle, Droplets, Thermometer, Eye, ThumbsUp, ThumbsDown } from "lucide-react";
+import { AlertTriangle, Droplets, Thermometer, Eye, ThumbsUp, ThumbsDown, Cloud } from "lucide-react";
 import { User } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
 import CropHealthChart from "./CropHealthChart";
 import FieldMap from "./FieldMap";
 
@@ -12,17 +13,63 @@ interface FarmerDashboardProps {
 }
 
 const FarmerDashboard = ({ user }: FarmerDashboardProps) => {
-  // Mock data for farmer dashboard
+  const [fieldData, setFieldData] = useState<any>(null);
+
+  useEffect(() => {
+    // Load field data from localStorage
+    const storedData = localStorage.getItem('fieldData');
+    if (storedData) {
+      setFieldData(JSON.parse(storedData));
+    }
+  }, []);
+
+  // Crop health status (can be derived from sensor data in the future)
   const cropHealthStatus = {
     overall: "good",
     ndvi: 0.75,
     healthScore: 85
   };
 
-  const sensorData = [
+  // Use actual sensor data from field input or fallback to mock data
+  const getSensorStatus = (value: number, type: 'moisture' | 'temperature' | 'humidity') => {
+    switch (type) {
+      case 'moisture':
+        return value >= 40 && value <= 70 ? 'good' : value < 40 ? 'warning' : 'danger';
+      case 'temperature':
+        return value >= 18 && value <= 30 ? 'good' : 'warning';
+      case 'humidity':
+        return value >= 40 && value <= 80 ? 'good' : 'warning';
+      default:
+        return 'good';
+    }
+  };
+
+  const sensorData = fieldData ? [
+    { 
+      label: "Soil Moisture", 
+      value: parseInt(fieldData.soilMoisture) || 65, 
+      unit: "%", 
+      icon: Droplets, 
+      status: getSensorStatus(parseInt(fieldData.soilMoisture) || 65, 'moisture')
+    },
+    { 
+      label: "Temperature", 
+      value: parseInt(fieldData.temperature) || 24, 
+      unit: "°C", 
+      icon: Thermometer, 
+      status: getSensorStatus(parseInt(fieldData.temperature) || 24, 'temperature')
+    },
+    { 
+      label: "Humidity", 
+      value: parseInt(fieldData.humidity) || 72, 
+      unit: "%", 
+      icon: Cloud, 
+      status: getSensorStatus(parseInt(fieldData.humidity) || 72, 'humidity')
+    }
+  ] : [
     { label: "Soil Moisture", value: 65, unit: "%", icon: Droplets, status: "good" },
     { label: "Temperature", value: 24, unit: "°C", icon: Thermometer, status: "good" },
-    { label: "Humidity", value: 72, unit: "%", icon: Eye, status: "warning" }
+    { label: "Humidity", value: 72, unit: "%", icon: Cloud, status: "warning" }
   ];
 
   const recommendations = [

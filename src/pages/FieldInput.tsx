@@ -35,7 +35,7 @@ const FieldInput = () => {
     setLoading(true);
     
     try {
-      // Combine all field data for mock dashboard
+      // Combine all field data for dashboard
       const completeFieldData = {
         ...formData,
         location: formData.location || fieldData.location || 'Demo Location',
@@ -44,6 +44,9 @@ const FieldInput = () => {
         userRole,
         timestamp: new Date().toISOString(),
       };
+
+      // Store field data in localStorage for dashboard
+      localStorage.setItem('fieldData', JSON.stringify(completeFieldData));
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
